@@ -138,11 +138,23 @@ async function loadDynamicContent() {
 }
 
 function initLoader() {
-  window.addEventListener('load', () => {
+  const loader = document.getElementById('loader');
+  if (!loader) return;
+  
+  let loaded = false;
+  const hideLoader = () => {
+    if (loaded) return;
+    loaded = true;
+    loader.style.opacity = '0';
     setTimeout(() => {
-      document.getElementById('loader').classList.add('hidden');
-    }, 1200);
-  });
+      loader.style.display = 'none';
+    }, 500);
+  };
+
+  window.addEventListener('load', hideLoader);
+  
+  // Fallback: forcefully hide loader after 3 seconds
+  setTimeout(hideLoader, 3000);
 }
 
 function initNav() {
