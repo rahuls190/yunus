@@ -133,7 +133,7 @@ let editingArtworkIndex = -1;
 
 async function fetchArtworks() {
   if (!window.supabase) return defaultArtworks;
-  const { data, error } = await supabase.from('artworks').select('*').order('order_idx', { ascending: true });
+  const { data, error } = await supabaseClient.from('artworks').select('*').order('order_idx', { ascending: true });
   if (error || !data || data.length === 0) return defaultArtworks;
   return data;
 }
@@ -250,7 +250,7 @@ async function updateArtwork(index, src, title, medium, description, featured) {
   const art = currentArtworks[index];
   
   if (window.supabase && art.id) {
-    const { error } = await supabase.from('artworks').update({ src, title, medium, description, featured }).eq('id', art.id);
+    const { error } = await supabaseClient.from('artworks').update({ src, title, medium, description, featured }).eq('id', art.id);
     if (error) { toast('Error updating artwork', true); return; }
   } else {
      const artworks = getData('yk_artworks', defaultArtworks);
@@ -267,7 +267,7 @@ async function saveNewArtwork(src, title, medium, description, featured) {
   const order_idx = currentArtworks.length > 0 ? Math.max(...currentArtworks.map(a => a.order_idx || 0)) + 1 : 0;
   
   if (window.supabase) {
-    const { error } = await supabase.from('artworks').insert([{ src, title, medium, description, featured, order_idx }]);
+    const { error } = await supabaseClient.from('artworks').insert([{ src, title, medium, description, featured, order_idx }]);
     if (error) { toast('Error saving artwork', true); return; }
   } else {
      const artworks = getData('yk_artworks', defaultArtworks);
@@ -285,7 +285,7 @@ async function deleteArtwork(index) {
   const art = currentArtworks[index];
   
   if (window.supabase && art.id) {
-    const { error } = await supabase.from('artworks').delete().eq('id', art.id);
+    const { error } = await supabaseClient.from('artworks').delete().eq('id', art.id);
     if (error) { toast('Error deleting artwork', true); return; }
   } else {
     const artworks = getData('yk_artworks', defaultArtworks);
@@ -309,8 +309,8 @@ async function moveArtwork(index, direction) {
   targetArt.order_idx = tempOrder;
   
   if (window.supabase && currentArt.id && targetArt.id) {
-    await supabase.from('artworks').update({ order_idx: currentArt.order_idx }).eq('id', currentArt.id);
-    await supabase.from('artworks').update({ order_idx: targetArt.order_idx }).eq('id', targetArt.id);
+    await supabaseClient.from('artworks').update({ order_idx: currentArt.order_idx }).eq('id', currentArt.id);
+    await supabaseClient.from('artworks').update({ order_idx: targetArt.order_idx }).eq('id', targetArt.id);
   } else {
     const artworks = getData('yk_artworks', defaultArtworks);
     const temp = artworks[index];
@@ -327,7 +327,7 @@ async function toggleFeatured(index) {
   art.featured = !art.featured;
   
   if (window.supabase && art.id) {
-    const { error } = await supabase.from('artworks').update({ featured: art.featured }).eq('id', art.id);
+    const { error } = await supabaseClient.from('artworks').update({ featured: art.featured }).eq('id', art.id);
     if (error) { toast('Error updating artwork', true); return; }
   } else {
     const artworks = getData('yk_artworks', defaultArtworks);
@@ -355,7 +355,7 @@ function clearArtworkForm() {
 async function loadAboutAdmin() {
   let about = defaultAbout;
   if (window.supabase) {
-    const { data, error } = await supabase.from('about').select('*').eq('id', 1).single();
+    const { data, error } = await supabaseClient.from('about').select('*').eq('id', 1).single();
     if (!error && data) about = data;
   } else {
     about = getData('yk_about', defaultAbout);
@@ -379,7 +379,7 @@ async function saveAbout() {
   };
   
   if (window.supabase) {
-    const { error } = await supabase.from('about').update(about).eq('id', 1);
+    const { error } = await supabaseClient.from('about').update(about).eq('id', 1);
     if (error) { toast('Error saving About section', true); return; }
   } else {
     localStorage.setItem('yk_about', JSON.stringify(about));
@@ -394,7 +394,7 @@ async function saveAbout() {
 async function loadExhibitionAdmin() {
   let exh = defaultExhibition;
   if (window.supabase) {
-    const { data, error } = await supabase.from('exhibition').select('*').eq('id', 1).single();
+    const { data, error } = await supabaseClient.from('exhibition').select('*').eq('id', 1).single();
     if (!error && data) exh = data;
   } else {
     exh = getData('yk_exhibition', defaultExhibition);
@@ -422,7 +422,7 @@ async function saveExhibition() {
   };
   
   if (window.supabase) {
-    const { error } = await supabase.from('exhibition').update(exh).eq('id', 1);
+    const { error } = await supabaseClient.from('exhibition').update(exh).eq('id', 1);
     if (error) { toast('Error saving Exhibition', true); return; }
   } else {
     localStorage.setItem('yk_exhibition', JSON.stringify(exh));
@@ -437,7 +437,7 @@ async function saveExhibition() {
 async function loadQuoteAdmin() {
   let quote = defaultHeroQuote;
   if (window.supabase) {
-    const { data, error } = await supabase.from('site_settings').select('hero_quote').eq('id', 1).single();
+    const { data, error } = await supabaseClient.from('site_settings').select('hero_quote').eq('id', 1).single();
     if (!error && data) quote = data.hero_quote;
   } else {
     quote = localStorage.getItem('yk_hero_quote') || defaultHeroQuote;
@@ -448,7 +448,7 @@ async function loadQuoteAdmin() {
 async function saveQuote() {
   const quote = document.getElementById('heroQuote').value;
   if (window.supabase) {
-    const { error } = await supabase.from('site_settings').update({ hero_quote: quote }).eq('id', 1);
+    const { error } = await supabaseClient.from('site_settings').update({ hero_quote: quote }).eq('id', 1);
     if (error) { toast('Error saving Quote', true); return; }
   } else {
     localStorage.setItem('yk_hero_quote', quote);

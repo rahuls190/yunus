@@ -56,25 +56,25 @@ const defaultHeroQuote = `"Art is the mirror of the soul — each line I draw is
 const DataManager = {
   async getArtworks() {
     if (!window.supabase) return defaultArtworks;
-    const { data, error } = await supabase.from('artworks').select('*').order('order_idx', { ascending: true });
+    const { data, error } = await supabaseClient.from('artworks').select('*').order('order_idx', { ascending: true });
     if (error || !data || data.length === 0) return defaultArtworks;
     return data;
   },
   async getAbout() {
     if (!window.supabase) return defaultAbout;
-    const { data, error } = await supabase.from('about').select('*').eq('id', 1).single();
+    const { data, error } = await supabaseClient.from('about').select('*').eq('id', 1).single();
     if (error || !data) return defaultAbout;
     return data;
   },
   async getExhibition() {
     if (!window.supabase) return defaultExhibition;
-    const { data, error } = await supabase.from('exhibition').select('*').eq('id', 1).single();
+    const { data, error } = await supabaseClient.from('exhibition').select('*').eq('id', 1).single();
     if (error || !data) return defaultExhibition;
     return data;
   },
   async getHeroQuote() {
     if (!window.supabase) return defaultHeroQuote;
-    const { data, error } = await supabase.from('site_settings').select('hero_quote').eq('id', 1).single();
+    const { data, error } = await supabaseClient.from('site_settings').select('hero_quote').eq('id', 1).single();
     if (error || !data) return defaultHeroQuote;
     return data.hero_quote;
   }
