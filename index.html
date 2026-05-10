@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yunus Khimani — Artist</title>
+  <meta name="description" content="Portfolio of Yunus Khimani, a distinguished Indian artist known for expressive figurative works exploring human emotion through intricate cross-hatching and bold earth tones.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-text">Yunus Khimani</div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand" onclick="showPage('home')">Yunus <span>Khimani</span></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#" class="active" data-page="home" onclick="showPage('home')">Home</a></li>
+      <li><a href="#" data-page="gallery" onclick="showPage('gallery')">Gallery</a></li>
+      <li><a href="#" data-page="about" onclick="showPage('about')">About</a></li>
+      <li><a href="#" data-page="contact" onclick="showPage('contact')">Contact</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <ul class="mobile-menu-links">
+    <li><a href="#" onclick="showPage('home');closeMobile()">Home</a></li>
+    <li><a href="#" onclick="showPage('gallery');closeMobile()">Gallery</a></li>
+    <li><a href="#" onclick="showPage('about');closeMobile()">About</a></li>
+    <li><a href="#" onclick="showPage('contact');closeMobile()">Contact</a></li>
+  </ul>
+</div>
+
+<!-- ════════════ HOME ════════════ -->
+<main class="page active" id="page-home">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-slideshow" id="heroSlideshow">
+      <div class="hero-slide active">
+        <img src="images/Cataloug  03_Page_01_Image_0001.jpg" alt="Artwork by Yunus Khimani">
+      </div>
+      <div class="hero-slide">
+        <img src="images/Cataloug  03_Page_14_Image_0001.jpg" alt="Artwork by Yunus Khimani">
+      </div>
+      <div class="hero-slide">
+        <img src="images/Cataloug  03_Page_09_Image_0001.jpg" alt="Artwork by Yunus Khimani">
+      </div>
+      <div class="hero-slide">
+        <img src="images/Cataloug  03_Page_32_Image_0001.jpg" alt="Artwork by Yunus Khimani">
+      </div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-subtitle">Contemporary Indian Art</p>
+      <h1 class="hero-title">Yunus Khimani</h1>
+      <p class="hero-tagline">Exploring the depths of human emotion through line, form & colour</p>
+      <a href="#" class="hero-cta" onclick="showPage('gallery')">View Gallery</a>
+    </div>
+    <div class="hero-scroll">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </div>
+  </section>
+
+  <!-- Selected Works Slider -->
+  <section class="slider-section fade-in">
+    <p class="section-label">Selected Works</p>
+    <div class="slider-wrapper">
+      <div class="slider-track" id="sliderTrack">
+        <!-- Filled dynamically by script.js with featured artworks -->
+      </div>
+      <button class="slider-btn slider-prev" id="sliderPrev" aria-label="Previous">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="slider-btn slider-next" id="sliderNext" aria-label="Next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>
+      </button>
+    </div>
+    <p class="slider-caption" id="sliderCaption"></p>
+  </section>
+
+  <!-- Quote -->
+  <section class="quote-section fade-in">
+    <blockquote class="quote-text">
+      "Art is the mirror of the soul — each line I draw is a conversation between my inner world and the canvas, a silent dialogue that speaks louder than words."
+    </blockquote>
+    <p class="quote-author">— Yunus Khimani</p>
+  </section>
+
+  <!-- Exhibition Banner -->
+  <section class="exhibition-section fade-in" id="exhibitionSection">
+    <div class="exhibition-inner">
+      <p class="exhibition-label">Current Exhibition</p>
+      <h2 class="exhibition-title">"I FEAR........"</h2>
+      <div class="exhibition-details">
+        <p class="exhibition-subtitle">A Solo Exhibition of Paintings</p>
+        <p class="exhibition-venue"><strong>Jehangir Art Gallery</strong>, Mumbai</p>
+        <p class="exhibition-dates">30th December 2025 — 5th January 2026</p>
+        <p class="exhibition-desc" style="margin-top:20px;">An intimate exploration of fear, vulnerability, and the human condition through large-scale figurative works in oil, acrylic, and mixed media.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════ GALLERY ════════════ -->
+<main class="page" id="page-gallery">
+  <div class="gallery-header fade-in">
+    <h1 class="gallery-title">Gallery</h1>
+    <p class="gallery-desc">A collection of paintings exploring the human form, emotion, and the interplay between vulnerability and strength.</p>
+  </div>
+  <div class="gallery-masonry" id="galleryMasonry">
+    <!-- Filled by JS -->
+  </div>
+</main>
+
+<!-- ════════════ ABOUT ════════════ -->
+<main class="page" id="page-about">
+  <div class="about-hero fade-in">
+    <h1>About the Artist</h1>
+    <p>Painter · Educator · Museum Director</p>
+  </div>
+
+  <div class="about-content">
+    <figure class="about-image fade-in">
+      <img src="images/Cataloug  03_Page_29_Image_0001.jpg" alt="Yunus Khimani portrait">
+      <figcaption>Yunus Khimani in his studio</figcaption>
+    </figure>
+
+    <div class="about-text fade-in">
+      <h2>Yunus Khimani</h2>
+      <p class="about-bio">Yunus Khimani is a distinguished Indian artist whose work traverses the boundaries between figuration and expression. Born and raised in India, he developed an early fascination with the human form and the emotional narratives it carries. His artistic journey has been shaped by rigorous academic training and decades of professional practice spanning painting, education, and museum curation.</p>
+
+      <div class="highlight">
+        "My work is an exploration of the human condition — each figure, each line, each gesture is a meditation on what it means to be alive, to feel, to fear, and to hope."
+      </div>
+
+      <p class="about-p2">Khimani earned his Bachelor of Fine Arts (BFA) from the prestigious Faculty of Fine Arts, Maharaja Sayajirao University of Baroda (1981), one of India's most respected institutions for visual arts. This foundational training in the Baroda school tradition — known for its emphasis on figuration, narrative, and social commentary — deeply influenced his artistic vocabulary.</p>
+
+      <p class="about-p3">His paintings are characterized by intricate cross-hatching, bold earth tones of burnt sienna, deep crimson, and raw umber, layered over expansive canvases. The figures in his works seem to emerge from and dissolve into their surroundings, creating a powerful tension between presence and absence, solidity and fragility.</p>
+
+      <p class="about-p4">Beyond his studio practice, Khimani has made significant contributions to India's cultural landscape. He served as Director of the City Palace Museum, Jaipur from 2010 to 2018, overseeing one of India's most important heritage collections. He has also served as Dean and Associate Professor at the Indian Institute of Crafts and Design (IICD), Jaipur, shaping the next generation of visual artists and designers.</p>
+
+      <p class="about-p5">In 1996, he was awarded the Junior Fellowship by the Ministry of Culture, Government of India — a recognition of his outstanding contributions to the visual arts. His work has been exhibited extensively across India, with solo and group shows at prestigious galleries.</p>
+
+      <div class="cv-section">
+        <h3>Education</h3>
+        <div class="cv-item">
+          <span class="cv-year">1981</span>
+          <span class="cv-desc">BFA, Faculty of Fine Arts, Maharaja Sayajirao University of Baroda</span>
+        </div>
+      </div>
+
+      <div class="cv-section">
+        <h3>Professional Experience</h3>
+        <div class="cv-item">
+          <span class="cv-year">2010–18</span>
+          <span class="cv-desc">Director, City Palace Museum, Jaipur</span>
+        </div>
+        <div class="cv-item">
+          <span class="cv-year">Present</span>
+          <span class="cv-desc">Dean & Associate Professor, Indian Institute of Crafts and Design (IICD), Jaipur</span>
+        </div>
+      </div>
+
+      <div class="cv-section">
+        <h3>Awards & Fellowships</h3>
+        <div class="cv-item">
+          <span class="cv-year">1996</span>
+          <span class="cv-desc">Junior Fellowship, Ministry of Culture, Government of India</span>
+        </div>
+      </div>
+
+      <div class="cv-section">
+        <h3>Solo Exhibitions</h3>
+        <div class="cv-item">
+          <span class="cv-year">2025–26</span>
+          <span class="cv-desc">"I FEAR........" — Solo Exhibition, Jehangir Art Gallery, Mumbai (30 Dec 2025 – 5 Jan 2026)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ════════════ CONTACT ════════════ -->
+<main class="page" id="page-contact">
+  <div class="contact-content fade-in">
+    <h1>Contact</h1>
+    <p>For inquiries about artworks, exhibitions, commissions, or collaborations, please reach out.</p>
+    <p>Email: <a href="mailto:yunuskhimani@gmail.com">yunuskhimani@gmail.com</a></p>
+
+    <form class="contact-form" onsubmit="event.preventDefault(); alert('Thank you for your message. Yunus will respond shortly.');">
+      <div class="form-group">
+        <label for="contact-name">Your Name</label>
+        <input type="text" id="contact-name" required>
+      </div>
+      <div class="form-group">
+        <label for="contact-email">Email Address</label>
+        <input type="email" id="contact-email" required>
+      </div>
+      <div class="form-group">
+        <label for="contact-subject">Subject</label>
+        <input type="text" id="contact-subject">
+      </div>
+      <div class="form-group">
+        <label for="contact-message">Message</label>
+        <textarea id="contact-message" rows="5" required></textarea>
+      </div>
+      <button type="submit" class="form-submit">Send Message</button>
+    </form>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer-name">Yunus Khimani</p>
+  <p>&copy; 2025 All rights reserved</p>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lbClose">&times;</button>
+  <button class="lightbox-nav lightbox-prev" id="lbPrev">&#8249;</button>
+  <button class="lightbox-nav lightbox-next" id="lbNext">&#8250;</button>
+  <img src="" alt="" id="lbImg">
+  <div class="lightbox-caption">
+    <h3 id="lbTitle"></h3>
+    <p id="lbMeta"></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
