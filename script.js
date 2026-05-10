@@ -54,20 +54,29 @@ const defaultHeroQuote = `"Art is the mirror of the soul — each line I draw is
 
 // ─── Data Manager ───
 const DataManager = {
-  getArtworks() {
-    const stored = localStorage.getItem('yk_artworks');
-    return stored ? JSON.parse(stored) : defaultArtworks;
+  async getArtworks() {
+    if (!window.supabase) return defaultArtworks;
+    const { data, error } = await supabase.from('artworks').select('*').order('order_idx', { ascending: true });
+    if (error || !data || data.length === 0) return defaultArtworks;
+    return data;
   },
-  getAbout() {
-    const stored = localStorage.getItem('yk_about');
-    return stored ? JSON.parse(stored) : defaultAbout;
+  async getAbout() {
+    if (!window.supabase) return defaultAbout;
+    const { data, error } = await supabase.from('about').select('*').eq('id', 1).single();
+    if (error || !data) return defaultAbout;
+    return data;
   },
-  getExhibition() {
-    const stored = localStorage.getItem('yk_exhibition');
-    return stored ? JSON.parse(stored) : defaultExhibition;
+  async getExhibition() {
+    if (!window.supabase) return defaultExhibition;
+    const { data, error } = await supabase.from('exhibition').select('*').eq('id', 1).single();
+    if (error || !data) return defaultExhibition;
+    return data;
   },
-  getHeroQuote() {
-    return localStorage.getItem('yk_hero_quote') || defaultHeroQuote;
+  async getHeroQuote() {
+    if (!window.supabase) return defaultHeroQuote;
+    const { data, error } = await supabase.from('site_settings').select('hero_quote').eq('id', 1).single();
+    if (error || !data) return defaultHeroQuote;
+    return data.hero_quote;
   }
 };
 
@@ -75,8 +84,8 @@ const DataManager = {
 let artworks = [];
 
 // ─── DOM Ready ───
-document.addEventListener('DOMContentLoaded', () => {
-  artworks = DataManager.getArtworks();
+document.addEventListener('DOMContentLoaded', async () => {
+  artworks = await DataManager.getArtworks();
   initLoader();
   initNav();
   initHeroSlideshow();
@@ -84,15 +93,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initGallery();
   initLightbox();
   initScrollAnimations();
-  loadDynamicContent();
+  await loadDynamicContent();
 });
 
 // ─── Load Dynamic Content ───
-function loadDynamicContent() {
+async function loadDynamicContent() {
   const quoteEl = document.querySelector('.quote-text');
-  if (quoteEl) quoteEl.textContent = DataManager.getHeroQuote();
+  if (quoteEl) quoteEl.textContent = await DataManager.getHeroQuote();
 
-  const exh = DataManager.getExhibition();
+  const exh = await DataManager.getExhibition();
   const exhSection = document.getElementById('exhibitionSection');
   if (exhSection) {
     exhSection.style.display = exh.enabled ? 'block' : 'none';
@@ -110,7 +119,7 @@ function loadDynamicContent() {
     if (lbl) lbl.textContent = exh.label;
   }
 
-  const about = DataManager.getAbout();
+  const about = await DataManager.getAbout();
   const aboutText = document.querySelector('.about-text');
   if (aboutText) {
     const bio = aboutText.querySelector('.about-bio');

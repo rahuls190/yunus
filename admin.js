@@ -117,24 +117,33 @@ function switchTab(tab) {
 }
 
 // ─── Load All Data ───
-function loadAllData() {
-  loadGalleryAdmin();
-  loadAboutAdmin();
-  loadExhibitionAdmin();
-  loadQuoteAdmin();
+async function loadAllData() {
+  await loadGalleryAdmin();
+  await loadAboutAdmin();
+  await loadExhibitionAdmin();
+  await loadQuoteAdmin();
 }
 
 // ════════════════════════
 //  GALLERY MANAGEMENT
 // ════════════════════════
 
-function loadGalleryAdmin() {
-  const artworks = getData('yk_artworks', defaultArtworks);
+let currentArtworks = [];
+
+async function fetchArtworks() {
+  if (!window.supabase) return defaultArtworks;
+  const { data, error } = await supabase.from('artworks').select('*').order('order_idx', { ascending: true });
+  if (error || !data || data.length === 0) return defaultArtworks;
+  return data;
+}
+
+async function loadGalleryAdmin() {
+  currentArtworks = await fetchArtworks();
   const grid = document.getElementById('adminGallery');
-  document.getElementById('artworkCount').textContent = artworks.length;
+  document.getElementById('artworkCount').textContent = currentArtworks.length;
   grid.innerHTML = '';
 
-  artworks.forEach((art, i) => {
+  currentArtworks.forEach((art, i) => {
     const item = document.createElement('div');
     item.className = 'gallery-admin-item';
     
@@ -153,7 +162,7 @@ function loadGalleryAdmin() {
           ${featuredIcon}
         </button>
         <button class="btn btn-sm" onclick="moveArtwork(${i}, -1)" ${i === 0 ? 'disabled' : ''} style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">↑</button>
-        <button class="btn btn-sm" onclick="moveArtwork(${i}, 1)" ${i === artworks.length - 1 ? 'disabled' : ''} style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">↓</button>
+        <button class="btn btn-sm" onclick="moveArtwork(${i}, 1)" ${i === currentArtworks.length - 1 ? 'disabled' : ''} style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">↓</button>
       </div>
       <div class="gallery-admin-actions">
         <button class="btn btn-danger btn-sm" onclick="deleteArtwork(${i})">Delete</button>
@@ -163,7 +172,7 @@ function loadGalleryAdmin() {
   });
 }
 
-function addArtwork() {
+async function addArtwork() {
   const fileInput = document.getElementById('artworkFile');
   const pathInput = document.getElementById('artworkPath');
   const titleInput = document.getElementById('artworkTitle');
@@ -182,58 +191,96 @@ function addArtwork() {
   const file = fileInput.files[0];
   const path = pathInput.value.trim();
 
+  let finalSrc = path;
+
   if (file) {
     const reader = new FileReader();
-    reader.onload = function(e) {
-      const artworks = getData('yk_artworks', defaultArtworks);
-      artworks.push({ src: e.target.result, title, medium, description, featured });
-      localStorage.setItem('yk_artworks', JSON.stringify(artworks));
-      loadGalleryAdmin();
-      clearArtworkForm();
-      toast('Artwork added successfully!');
+    reader.onload = async function(e) {
+      finalSrc = e.target.result;
+      await saveNewArtwork(finalSrc, title, medium, description, featured);
     };
     reader.readAsDataURL(file);
   } else if (path) {
-    const artworks = getData('yk_artworks', defaultArtworks);
-    artworks.push({ src: path, title, medium, description, featured });
-    localStorage.setItem('yk_artworks', JSON.stringify(artworks));
-    loadGalleryAdmin();
-    clearArtworkForm();
-    toast('Artwork added successfully!');
+    await saveNewArtwork(finalSrc, title, medium, description, featured);
   } else {
     toast('Please select an image file or enter a path', true);
   }
 }
 
-function deleteArtwork(index) {
+async function saveNewArtwork(src, title, medium, description, featured) {
+  const order_idx = currentArtworks.length > 0 ? Math.max(...currentArtworks.map(a => a.order_idx || 0)) + 1 : 0;
+  
+  if (window.supabase) {
+    const { error } = await supabase.from('artworks').insert([{ src, title, medium, description, featured, order_idx }]);
+    if (error) { toast('Error saving artwork', true); return; }
+  } else {
+     const artworks = getData('yk_artworks', defaultArtworks);
+     artworks.push({ src, title, medium, description, featured });
+     localStorage.setItem('yk_artworks', JSON.stringify(artworks));
+  }
+  
+  await loadGalleryAdmin();
+  clearArtworkForm();
+  toast('Artwork added successfully!');
+}
+
+async function deleteArtwork(index) {
   if (!confirm('Remove this artwork from the gallery?')) return;
-  const artworks = getData('yk_artworks', defaultArtworks);
-  artworks.splice(index, 1);
-  localStorage.setItem('yk_artworks', JSON.stringify(artworks));
-  loadGalleryAdmin();
+  const art = currentArtworks[index];
+  
+  if (window.supabase && art.id) {
+    const { error } = await supabase.from('artworks').delete().eq('id', art.id);
+    if (error) { toast('Error deleting artwork', true); return; }
+  } else {
+    const artworks = getData('yk_artworks', defaultArtworks);
+    artworks.splice(index, 1);
+    localStorage.setItem('yk_artworks', JSON.stringify(artworks));
+  }
+  
+  await loadGalleryAdmin();
   toast('Artwork removed');
 }
 
-function moveArtwork(index, direction) {
-  const artworks = getData('yk_artworks', defaultArtworks);
+async function moveArtwork(index, direction) {
   const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= currentArtworks.length) return;
   
-  if (targetIndex < 0 || targetIndex >= artworks.length) return;
+  const currentArt = currentArtworks[index];
+  const targetArt = currentArtworks[targetIndex];
   
-  const temp = artworks[index];
-  artworks[index] = artworks[targetIndex];
-  artworks[targetIndex] = temp;
+  const tempOrder = currentArt.order_idx !== undefined ? currentArt.order_idx : index;
+  currentArt.order_idx = targetArt.order_idx !== undefined ? targetArt.order_idx : targetIndex;
+  targetArt.order_idx = tempOrder;
   
-  localStorage.setItem('yk_artworks', JSON.stringify(artworks));
-  loadGalleryAdmin();
+  if (window.supabase && currentArt.id && targetArt.id) {
+    await supabase.from('artworks').update({ order_idx: currentArt.order_idx }).eq('id', currentArt.id);
+    await supabase.from('artworks').update({ order_idx: targetArt.order_idx }).eq('id', targetArt.id);
+  } else {
+    const artworks = getData('yk_artworks', defaultArtworks);
+    const temp = artworks[index];
+    artworks[index] = artworks[targetIndex];
+    artworks[targetIndex] = temp;
+    localStorage.setItem('yk_artworks', JSON.stringify(artworks));
+  }
+  
+  await loadGalleryAdmin();
 }
 
-function toggleFeatured(index) {
-  const artworks = getData('yk_artworks', defaultArtworks);
-  artworks[index].featured = !artworks[index].featured;
-  localStorage.setItem('yk_artworks', JSON.stringify(artworks));
-  loadGalleryAdmin();
-  toast(artworks[index].featured ? 'Added to Selected Works' : 'Removed from Selected Works');
+async function toggleFeatured(index) {
+  const art = currentArtworks[index];
+  art.featured = !art.featured;
+  
+  if (window.supabase && art.id) {
+    const { error } = await supabase.from('artworks').update({ featured: art.featured }).eq('id', art.id);
+    if (error) { toast('Error updating artwork', true); return; }
+  } else {
+    const artworks = getData('yk_artworks', defaultArtworks);
+    artworks[index].featured = art.featured;
+    localStorage.setItem('yk_artworks', JSON.stringify(artworks));
+  }
+  
+  await loadGalleryAdmin();
+  toast(art.featured ? 'Added to Selected Works' : 'Removed from Selected Works');
 }
 
 function clearArtworkForm() {
@@ -249,8 +296,14 @@ function clearArtworkForm() {
 //  ABOUT MANAGEMENT
 // ════════════════════════
 
-function loadAboutAdmin() {
-  const about = getData('yk_about', defaultAbout);
+async function loadAboutAdmin() {
+  let about = defaultAbout;
+  if (window.supabase) {
+    const { data, error } = await supabase.from('about').select('*').eq('id', 1).single();
+    if (!error && data) about = data;
+  } else {
+    about = getData('yk_about', defaultAbout);
+  }
   document.getElementById('aboutBio').value = about.bio || '';
   document.getElementById('aboutQuote').value = about.quote || '';
   document.getElementById('aboutP2').value = about.para2 || '';
@@ -259,7 +312,7 @@ function loadAboutAdmin() {
   document.getElementById('aboutP5').value = about.para5 || '';
 }
 
-function saveAbout() {
+async function saveAbout() {
   const about = {
     bio: document.getElementById('aboutBio').value,
     quote: document.getElementById('aboutQuote').value,
@@ -268,7 +321,13 @@ function saveAbout() {
     para4: document.getElementById('aboutP4').value,
     para5: document.getElementById('aboutP5').value
   };
-  localStorage.setItem('yk_about', JSON.stringify(about));
+  
+  if (window.supabase) {
+    const { error } = await supabase.from('about').update(about).eq('id', 1);
+    if (error) { toast('Error saving About section', true); return; }
+  } else {
+    localStorage.setItem('yk_about', JSON.stringify(about));
+  }
   toast('About section saved!');
 }
 
@@ -276,8 +335,14 @@ function saveAbout() {
 //  EXHIBITION MANAGEMENT
 // ════════════════════════
 
-function loadExhibitionAdmin() {
-  const exh = getData('yk_exhibition', defaultExhibition);
+async function loadExhibitionAdmin() {
+  let exh = defaultExhibition;
+  if (window.supabase) {
+    const { data, error } = await supabase.from('exhibition').select('*').eq('id', 1).single();
+    if (!error && data) exh = data;
+  } else {
+    exh = getData('yk_exhibition', defaultExhibition);
+  }
   document.getElementById('exhEnabled').checked = exh.enabled;
   document.getElementById('exhLabel').value = exh.label || '';
   document.getElementById('exhTitle').value = exh.title || '';
@@ -288,7 +353,7 @@ function loadExhibitionAdmin() {
   document.getElementById('exhDesc').value = exh.description || '';
 }
 
-function saveExhibition() {
+async function saveExhibition() {
   const exh = {
     enabled: document.getElementById('exhEnabled').checked,
     label: document.getElementById('exhLabel').value,
@@ -299,7 +364,13 @@ function saveExhibition() {
     dates: document.getElementById('exhDates').value,
     description: document.getElementById('exhDesc').value
   };
-  localStorage.setItem('yk_exhibition', JSON.stringify(exh));
+  
+  if (window.supabase) {
+    const { error } = await supabase.from('exhibition').update(exh).eq('id', 1);
+    if (error) { toast('Error saving Exhibition', true); return; }
+  } else {
+    localStorage.setItem('yk_exhibition', JSON.stringify(exh));
+  }
   toast('Exhibition settings saved!');
 }
 
@@ -307,13 +378,24 @@ function saveExhibition() {
 //  QUOTE MANAGEMENT
 // ════════════════════════
 
-function loadQuoteAdmin() {
-  const quote = localStorage.getItem('yk_hero_quote') || defaultHeroQuote;
+async function loadQuoteAdmin() {
+  let quote = defaultHeroQuote;
+  if (window.supabase) {
+    const { data, error } = await supabase.from('site_settings').select('hero_quote').eq('id', 1).single();
+    if (!error && data) quote = data.hero_quote;
+  } else {
+    quote = localStorage.getItem('yk_hero_quote') || defaultHeroQuote;
+  }
   document.getElementById('heroQuote').value = quote;
 }
 
-function saveQuote() {
+async function saveQuote() {
   const quote = document.getElementById('heroQuote').value;
-  localStorage.setItem('yk_hero_quote', quote);
+  if (window.supabase) {
+    const { error } = await supabase.from('site_settings').update({ hero_quote: quote }).eq('id', 1);
+    if (error) { toast('Error saving Quote', true); return; }
+  } else {
+    localStorage.setItem('yk_hero_quote', quote);
+  }
   toast('Quote saved!');
 }
