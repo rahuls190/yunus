@@ -78,7 +78,7 @@
     <div class="tab-content active" id="tab-gallery">
       <div class="card">
         <div class="card-header">
-          <h3>Add New Artwork</h3>
+          <h3 id="artworkFormTitle">Add New Artwork</h3>
         </div>
         <div class="card-body">
           <div class="form-row">
@@ -115,10 +115,15 @@
               </label>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="addArtwork()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Artwork
-          </button>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" id="submitArtworkBtn" onclick="submitArtworkForm()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add Artwork</span>
+            </button>
+            <button class="btn" id="cancelEditBtn" onclick="cancelEdit()" style="display: none; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
 

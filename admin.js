@@ -129,6 +129,7 @@ async function loadAllData() {
 // ════════════════════════
 
 let currentArtworks = [];
+let editingArtworkIndex = -1;
 
 async function fetchArtworks() {
   if (!window.supabase) return defaultArtworks;
@@ -160,9 +161,12 @@ async function loadGalleryAdmin() {
         <p>${art.medium}</p>
       </div>
       <div class="gallery-admin-actions" style="margin-bottom: 5px;">
+        <button class="btn btn-sm" onclick="editArtwork(${i})" style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">Edit</button>
         <button class="btn btn-sm" onclick="toggleFeatured(${i})" style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);" title="Toggle Selected Works">
           ${featuredIcon}
         </button>
+      </div>
+      <div class="gallery-admin-actions" style="margin-bottom: 5px;">
         <button class="btn btn-sm" onclick="moveArtwork(${i}, -1)" ${i === 0 ? 'disabled' : ''} style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">↑</button>
         <button class="btn btn-sm" onclick="moveArtwork(${i}, 1)" ${i === currentArtworks.length - 1 ? 'disabled' : ''} style="flex:1; background:var(--bg-hover); color:var(--text); border:1px solid var(--border);">↓</button>
       </div>
@@ -174,7 +178,32 @@ async function loadGalleryAdmin() {
   });
 }
 
-async function addArtwork() {
+function editArtwork(index) {
+  const art = currentArtworks[index];
+  editingArtworkIndex = index;
+  
+  document.getElementById('artworkFormTitle').textContent = 'Edit Artwork';
+  document.getElementById('artworkPath').value = art.src || '';
+  document.getElementById('artworkTitle').value = art.title || '';
+  document.getElementById('artworkMedium').value = art.medium || '';
+  document.getElementById('artworkDesc').value = art.description || '';
+  document.getElementById('artworkFeatured').checked = !!art.featured;
+  
+  document.getElementById('submitArtworkBtn').querySelector('span').textContent = 'Save Changes';
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  editingArtworkIndex = -1;
+  document.getElementById('artworkFormTitle').textContent = 'Add New Artwork';
+  document.getElementById('submitArtworkBtn').querySelector('span').textContent = 'Add Artwork';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  clearArtworkForm();
+}
+
+async function submitArtworkForm() {
   const fileInput = document.getElementById('artworkFile');
   const pathInput = document.getElementById('artworkPath');
   const titleInput = document.getElementById('artworkTitle');
@@ -199,14 +228,39 @@ async function addArtwork() {
     const reader = new FileReader();
     reader.onload = async function(e) {
       finalSrc = e.target.result;
-      await saveNewArtwork(finalSrc, title, medium, description, featured);
+      if (editingArtworkIndex >= 0) {
+        await updateArtwork(editingArtworkIndex, finalSrc, title, medium, description, featured);
+      } else {
+        await saveNewArtwork(finalSrc, title, medium, description, featured);
+      }
     };
     reader.readAsDataURL(file);
   } else if (path) {
-    await saveNewArtwork(finalSrc, title, medium, description, featured);
+    if (editingArtworkIndex >= 0) {
+      await updateArtwork(editingArtworkIndex, finalSrc, title, medium, description, featured);
+    } else {
+      await saveNewArtwork(finalSrc, title, medium, description, featured);
+    }
   } else {
     toast('Please select an image file or enter a path', true);
   }
+}
+
+async function updateArtwork(index, src, title, medium, description, featured) {
+  const art = currentArtworks[index];
+  
+  if (window.supabase && art.id) {
+    const { error } = await supabase.from('artworks').update({ src, title, medium, description, featured }).eq('id', art.id);
+    if (error) { toast('Error updating artwork', true); return; }
+  } else {
+     const artworks = getData('yk_artworks', defaultArtworks);
+     artworks[index] = { ...artworks[index], src, title, medium, description, featured };
+     localStorage.setItem('yk_artworks', JSON.stringify(artworks));
+  }
+  
+  cancelEdit();
+  await loadGalleryAdmin();
+  toast('Artwork updated successfully!');
 }
 
 async function saveNewArtwork(src, title, medium, description, featured) {
