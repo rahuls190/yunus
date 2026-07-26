@@ -156,7 +156,7 @@ let artworks = [];
 let blogPosts = [];
 
 // ─── DOM Ready ───
-async function init() {
+document.addEventListener('DOMContentLoaded', async () => {
   initLoader();
   initNav();
 
@@ -167,8 +167,7 @@ async function init() {
   const cpContainer = document.getElementById('collproConceptContainer');
   if (cpContainer) cpContainer.innerHTML = window.marked ? marked.parse(collproText) : collproText;
 
-  initGallery();
-  initNav();
+
   initHeroSlideshow();
   initSlider();
   initGallery();
