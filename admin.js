@@ -2,6 +2,12 @@
    Admin Panel — Yunus Khimani Portfolio
    ═══════════════════════════════════════ */
 
+// ─── Helpers ───
+function getData(key, def) {
+  const v = localStorage.getItem(key);
+  try { return v ? JSON.parse(v) : def; } catch(e) { return v || def; }
+}
+
 const ADMIN_PASS = 'yunus2025';
 
 // ─── Default data (mirrors script.js) ───

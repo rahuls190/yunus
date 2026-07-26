@@ -87,6 +87,12 @@ We are hoping for some fruitful results.
 
 <span class="collpro-date">drafted in June, 2026</span>`;
 
+// ─── Helpers ───
+function getData(key, def) {
+  const v = localStorage.getItem(key);
+  try { return v ? JSON.parse(v) : def; } catch(e) { return v || def; }
+}
+
 // ─── Data Manager ───
 const DataManager = {
   async getArtworks() {
