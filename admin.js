@@ -337,7 +337,7 @@ async function updateArtwork(index, src, title, medium, description, category, s
   
   if (window.supabase && art.id) {
     const { error } = await supabaseClient.from('artworks').update({ src, title, medium, description, category, subcategory, featured }).eq('id', art.id);
-    if (error) { toast('Error updating artwork', true); return; }
+    if (error) { toast('Error updating artwork: ' + error.message, true); console.error('Supabase error:', error); return; }
   } else {
      const artworks = getData('yk_artworks', defaultArtworks);
      artworks[index] = { ...artworks[index], src, title, medium, description, category, subcategory, featured };
@@ -354,7 +354,7 @@ async function saveNewArtwork(src, title, medium, description, category, subcate
   
   if (window.supabase) {
     const { error } = await supabaseClient.from('artworks').insert([{ src, title, medium, description, category, subcategory, featured, order_idx }]);
-    if (error) { toast('Error saving artwork', true); return; }
+    if (error) { toast('Error saving artwork: ' + error.message, true); console.error('Supabase error:', error); return; }
   } else {
      const artworks = getData('yk_artworks', defaultArtworks);
      artworks.push({ src, title, medium, description, category, subcategory, featured });
@@ -372,7 +372,7 @@ async function deleteArtwork(index) {
   
   if (window.supabase && art.id) {
     const { error } = await supabaseClient.from('artworks').delete().eq('id', art.id);
-    if (error) { toast('Error deleting artwork', true); return; }
+    if (error) { toast('Error deleting artwork: ' + error.message, true); console.error('Supabase error:', error); return; }
   } else {
     const artworks = getData('yk_artworks', defaultArtworks);
     artworks.splice(index, 1);
