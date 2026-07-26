@@ -119,7 +119,8 @@ function switchTab(tab) {
     about: 'About Section',
     collpro: 'Coll_pro Text',
     exhibition: 'Exhibition Settings',
-    quote: 'Homepage Quote'
+    quote: 'Homepage Quote',
+    settings: 'GitHub Settings'
   };
   document.getElementById('tabTitle').textContent = titles[tab] || tab;
 }
@@ -132,6 +133,75 @@ async function loadAllData() {
   await loadCollproAdmin();
   await loadExhibitionAdmin();
   await loadQuoteAdmin();
+  loadSettingsAdmin();
+}
+
+// ════════════════════════
+//  SETTINGS MANAGEMENT
+// ════════════════════════
+
+function loadSettingsAdmin() {
+  const settings = getData('yk_github_settings', { owner: 'rahuls190', repo: 'yunus', branch: 'main', token: '' });
+  document.getElementById('ghToken').value = settings.token || '';
+  document.getElementById('ghOwner').value = settings.owner || 'rahuls190';
+  document.getElementById('ghRepo').value = settings.repo || 'yunus';
+  document.getElementById('ghBranch').value = settings.branch || 'main';
+}
+
+function saveSettings() {
+  const settings = {
+    token: document.getElementById('ghToken').value.trim(),
+    owner: document.getElementById('ghOwner').value.trim(),
+    repo: document.getElementById('ghRepo').value.trim(),
+    branch: document.getElementById('ghBranch').value.trim() || 'main'
+  };
+  localStorage.setItem('yk_github_settings', JSON.stringify(settings));
+  toast('GitHub settings saved!');
+}
+
+async function uploadToGitHub(file, folder = 'images') {
+  const settings = getData('yk_github_settings', null);
+  if (!settings || !settings.token || !settings.owner || !settings.repo) {
+    throw new Error('GitHub settings not configured. Please go to the Settings tab.');
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64Content = e.target.result.split(',')[1];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const path = `${folder}/${fileName}`;
+      const url = `https://api.github.com/repos/${settings.owner}/${settings.repo}/contents/${path}`;
+      
+      try {
+        toast('Uploading to GitHub...', false);
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${settings.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Upload image ${fileName} via Admin Panel`,
+            content: base64Content,
+            branch: settings.branch || 'main'
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.message || 'GitHub API error');
+        }
+        
+        resolve(path);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
 }
 
 // ════════════════════════
@@ -241,16 +311,16 @@ async function submitArtworkForm() {
   let finalSrc = path;
 
   if (file) {
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      finalSrc = e.target.result;
+    try {
+      finalSrc = await uploadToGitHub(file, 'images');
       if (editingArtworkIndex >= 0) {
         await updateArtwork(editingArtworkIndex, finalSrc, title, medium, description, category, subcategory, featured);
       } else {
         await saveNewArtwork(finalSrc, title, medium, description, category, subcategory, featured);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      toast('Upload failed: ' + err.message, true);
+    }
   } else if (path) {
     if (editingArtworkIndex >= 0) {
       await updateArtwork(editingArtworkIndex, finalSrc, title, medium, description, category, subcategory, featured);
@@ -632,18 +702,12 @@ async function saveBlog() {
 
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `blog/${fileName}`;
-
-    const { error: uploadError } = await supabaseClient.storage.from('artworks').upload(filePath, file);
-    
-    if (uploadError) {
+    try {
+      imagePath = await uploadToGitHub(file, 'images/blog');
+    } catch (uploadError) {
       toast('Image upload failed: ' + uploadError.message, true);
       return;
     }
-    const { data } = supabaseClient.storage.from('artworks').getPublicUrl(filePath);
-    imagePath = data.publicUrl;
   }
 
   const payload = {
