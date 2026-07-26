@@ -111,6 +111,7 @@ function switchTab(tab) {
     gallery: 'Gallery Management',
     blog: 'Blog Management',
     about: 'About Section',
+    collpro: 'Coll_pro Text',
     exhibition: 'Exhibition Settings',
     quote: 'Homepage Quote'
   };
@@ -122,6 +123,7 @@ async function loadAllData() {
   await loadGalleryAdmin();
   await loadBlogAdmin();
   await loadAboutAdmin();
+  await loadCollproAdmin();
   await loadExhibitionAdmin();
   await loadQuoteAdmin();
 }
@@ -395,6 +397,63 @@ async function saveAbout() {
     localStorage.setItem('yk_about', JSON.stringify(about));
   }
   toast('About section saved!');
+}
+
+// ════════════════════════
+//  COLL_PRO TEXT MANAGEMENT
+// ════════════════════════
+
+async function loadCollproAdmin() {
+  let text = `## A Collaborative Project: a concept note
+
+I, Yunus Khimani, am an artist based in Jaipur, Rajasthan. I have been closely associated with the crafts of Rajasthan both on academic as well as personal level. I always felt that we need to look at these crafts more seriously and make effort to push its limits. I am a contemporary artist looking at the tradition closely. I wanted to see if there is a way of bringing these 2 different entities together.
+
+In June, 2023, I initiated a collaborative project (called Coll_pro). I started collaboration with 2 craftsmen:
+
+1. **Dr. Badshah Miyan** is a Master Dyer and a Shilp Guru from Rajasthan. He is well-known for his skills in Lehariya (tie and dye). He is an expert of natural indigo.
+2. **Giriraj Chippa**, a block printer belonging to chhipa community in Bagru.
+
+We worked with Dabu, Bagru Print, Tie & Dye, Clamp Dyeing, Dip Dyeing, Sanganeri Print and Hand Painted Textiles. We are also enthusiastic to work with Natural Indigo. We tried to push the traditional boundaries as well as repurpose the application. One of the breakthroughs we had is with hand painting using the traditional Bagru technique.
+
+The project is about working together on the same footing defying all hierarchies, where each member contributes as per his/her ability.
+
+The project aims to:
+
+- create an inclusive platform.
+- To create synergy between traditional processes and contemporary outlook.
+- explore materials, techniques and processes to discover new possibilities.
+- achieve sustainable practices by working with natural, biodegradable materials and processes as far as possible.
+
+Recently, 2 designers have joined the project.
+
+3. **Akshita Gangwal**, a young textile designer
+4. **Neerja Palisetty**, a weave designer
+
+We have now also started exploring Natural Dyes and Weaving. We are exploring the fusing of paper and natural dyed yarn and hand painting with weaving.
+
+We are hoping for some fruitful results.
+
+<span class="collpro-date">drafted in June, 2026</span>`;
+
+  if (window.supabase) {
+    const { data, error } = await supabaseClient.from('collpro_info').select('*').eq('id', 1).single();
+    if (!error && data) text = data.content;
+  } else {
+    text = getData('yk_collpro_text', text);
+  }
+  document.getElementById('collproTextInput').value = text;
+}
+
+async function saveCollpro() {
+  const content = document.getElementById('collproTextInput').value;
+  
+  if (window.supabase) {
+    const { error } = await supabaseClient.from('collpro_info').upsert({ id: 1, content: content });
+    if (error) { toast('Error saving Coll_pro text', true); return; }
+  } else {
+    localStorage.setItem('yk_collpro_text', JSON.stringify(content));
+  }
+  toast('Coll_pro text saved!');
 }
 
 // ════════════════════════

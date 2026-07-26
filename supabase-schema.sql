@@ -104,3 +104,13 @@ CREATE TABLE blog_posts (
 ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read access on blog_posts" ON blog_posts FOR SELECT USING (true);
 CREATE POLICY "Allow public all access on blog_posts" ON blog_posts FOR ALL USING (true);
+
+-- 8. Create Coll_pro Info Table
+CREATE TABLE collpro_info (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  content TEXT NOT NULL
+);
+
+ALTER TABLE collpro_info ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read access on collpro_info" ON collpro_info FOR SELECT USING (true);
+CREATE POLICY "Allow public all access on collpro_info" ON collpro_info FOR ALL USING (true);
