@@ -159,10 +159,55 @@ function saveSettings() {
   toast('GitHub settings saved!');
 }
 
+async function uploadImage(file, folder = 'images') {
+  // 1) Try Supabase Storage first
+  if (window.supabase) {
+    try {
+      toast('Uploading image...', false);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
+
+      const { data, error } = await supabaseClient.storage
+        .from('artwork-images')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabaseClient.storage
+        .from('artwork-images')
+        .getPublicUrl(filePath);
+
+      return urlData.publicUrl;
+    } catch (err) {
+      console.warn('Supabase Storage failed:', err.message);
+    }
+  }
+
+  // 2) Try GitHub only if settings are configured
+  const ghSettings = getData('yk_github_settings', null);
+  if (ghSettings && ghSettings.token && ghSettings.owner && ghSettings.repo) {
+    try {
+      return await uploadToGitHub(file, folder);
+    } catch (err) {
+      console.warn('GitHub upload failed:', err.message);
+    }
+  }
+
+  // 3) Fallback: convert to base64 data URL (always works, no external service needed)
+  toast('Saving image locally...', false);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadToGitHub(file, folder = 'images') {
   const settings = getData('yk_github_settings', null);
   if (!settings || !settings.token || !settings.owner || !settings.repo) {
-    throw new Error('GitHub settings not configured. Please go to the Settings tab.');
+    throw new Error('Image upload requires either Supabase Storage or GitHub settings. Go to Settings tab to configure GitHub, or set up a Supabase Storage bucket named "artwork-images".');
   }
 
   return new Promise((resolve, reject) => {
@@ -223,6 +268,11 @@ async function loadGalleryAdmin() {
   const grid = document.getElementById('adminGallery');
   document.getElementById('artworkCount').textContent = currentArtworks.length;
   grid.innerHTML = '';
+
+  // Ensure the form starts clean with featured toggle OFF
+  if (editingArtworkIndex < 0) {
+    clearArtworkForm();
+  }
 
   currentArtworks.forEach((art, i) => {
     const item = document.createElement('div');
@@ -312,7 +362,7 @@ async function submitArtworkForm() {
 
   if (file) {
     try {
-      finalSrc = await uploadToGitHub(file, 'images');
+      finalSrc = await uploadImage(file, 'images');
       if (editingArtworkIndex >= 0) {
         await updateArtwork(editingArtworkIndex, finalSrc, title, medium, description, category, subcategory, featured);
       } else {
@@ -433,7 +483,7 @@ function clearArtworkForm() {
   document.getElementById('artworkDesc').value = '';
   document.getElementById('artworkCategory').value = 'all';
   document.getElementById('artworkSubcategory').value = 'all';
-  document.getElementById('artworkFeatured').checked = false;
+  document.getElementById('artworkFeatured').checked = true;
 }
 
 // ════════════════════════
@@ -703,7 +753,7 @@ async function saveBlog() {
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
     try {
-      imagePath = await uploadToGitHub(file, 'images/blog');
+      imagePath = await uploadImage(file, 'images/blog');
     } catch (uploadError) {
       toast('Image upload failed: ' + uploadError.message, true);
       return;
