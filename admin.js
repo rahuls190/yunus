@@ -259,7 +259,32 @@ let editingArtworkIndex = -1;
 async function fetchArtworks() {
   if (!window.supabase) return defaultArtworks;
   const { data, error } = await supabaseClient.from('artworks').select('*').order('order_idx', { ascending: true });
-  if (error || !data || data.length === 0) return defaultArtworks;
+  if (error) return defaultArtworks;
+
+  // If table is empty or has very few rows (defaults never seeded), seed them now
+  if (!data || data.length < defaultArtworks.length) {
+    // Find which default artworks are missing by checking src
+    const existingSrcs = new Set((data || []).map(a => a.src));
+    const missing = defaultArtworks.filter(a => !existingSrcs.has(a.src));
+
+    if (missing.length > 0) {
+      const seedData = missing.map((art, i) => ({
+        src: art.src,
+        title: art.title,
+        medium: art.medium,
+        description: art.description || '',
+        category: art.category || 'all',
+        subcategory: art.subcategory || 'all',
+        featured: !!art.featured,
+        order_idx: (data ? data.length : 0) + i
+      }));
+      await supabaseClient.from('artworks').insert(seedData);
+      // Re-fetch with all data
+      const { data: all } = await supabaseClient.from('artworks').select('*').order('order_idx', { ascending: true });
+      return all || defaultArtworks;
+    }
+  }
+
   return data;
 }
 
