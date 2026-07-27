@@ -400,9 +400,26 @@ async function updateArtwork(index, src, title, medium, description, category, s
 }
 
 async function saveNewArtwork(src, title, medium, description, category, subcategory, featured) {
-  const order_idx = currentArtworks.length > 0 ? Math.max(...currentArtworks.map(a => a.order_idx || 0)) + 1 : 0;
-  
   if (window.supabase) {
+    // Check if Supabase table is empty — if so, seed the defaults first
+    const { data: existing } = await supabaseClient.from('artworks').select('id').limit(1);
+    if (!existing || existing.length === 0) {
+      toast('Initializing gallery database...', false);
+      const seedData = defaultArtworks.map((art, i) => ({
+        src: art.src,
+        title: art.title,
+        medium: art.medium,
+        description: art.description || '',
+        category: art.category || 'all',
+        subcategory: art.subcategory || 'all',
+        featured: !!art.featured,
+        order_idx: i
+      }));
+      const { error: seedError } = await supabaseClient.from('artworks').insert(seedData);
+      if (seedError) { console.error('Seed error:', seedError); }
+    }
+
+    const order_idx = currentArtworks.length > 0 ? Math.max(...currentArtworks.map(a => a.order_idx || 0)) + 1 : 0;
     const { error } = await supabaseClient.from('artworks').insert([{ src, title, medium, description, category, subcategory, featured, order_idx }]);
     if (error) { toast('Error saving artwork: ' + error.message, true); console.error('Supabase error:', error); return; }
   } else {
